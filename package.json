@@ -22,7 +22,7 @@
   "resolutions": {
     "eslint": "~6.1.0"
   },
-  "version": "1.0.1",
+  "version": "2.0.0",
   "main": "dist/index.common.js",
   "module": "dist/index.esm.js",
   "files": [
