@@ -1,13 +1,6 @@
 import JSZip from 'jszip';
 import { parseFile, resolveDeps } from './parser';
 
-const byKey = key => (a, b) => {
-  if (a[key] < b[key]) return -1;
-  if (a[key] > b[key]) return 1;
-  return 0;
-};
-const byName = byKey('name');
-
 export function parseFiles(files) {
   const items = files.map(parseFile);
   const invalid = items.filter(({ type }) => !type);
@@ -24,11 +17,6 @@ export function parseFiles(files) {
   for (const item of valid) {
     mapping[item.type].push(item);
   }
-  interfaces.sort(byName);
-  interfaces.forEach(item => item.payload.methods.sort(byName));
-  classes.sort(byName);
-  classes.forEach(item => item.payload.props.sort(byName));
-  enums.sort(byName);
   return {
     interfaces,
     classes,
