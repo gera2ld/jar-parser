@@ -5,9 +5,7 @@ const pkg = require('./package.json');
 const FILENAME = 'index';
 const BANNER = `/*! ${pkg.name} v${pkg.version} | ${pkg.license} License */`;
 
-const external = getExternal([
-  'jszip',
-]);
+const external = getExternal(['jszip']);
 const rollupConfig = [
   {
     input: {

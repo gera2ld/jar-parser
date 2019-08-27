@@ -8,5 +8,7 @@ module.exports = {
         '#': './src',
       },
     }],
+
+    process.env.BABEL_ENV === 'test' && 'istanbul',
   ].filter(Boolean),
 };
