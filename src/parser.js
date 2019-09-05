@@ -52,13 +52,26 @@ export function skipEmptyLines(context, lines, offset) {
   return { offset };
 }
 
-export function scanBlank(context, line, offset) {
+export function skipBlank(context, line, offset) {
   while (line[offset] === ' ') offset += 1;
   return { offset };
 }
 
+export function skipChar(context, line, offset, char) {
+  ({ offset } = skipBlank(context, line, offset));
+  const sep = line[offset];
+  if (sep && sep !== char) {
+    throw new Error(`\`${char}\` is expected:
+
+${line}
+${' '.repeat(offset)}^
+`);
+  }
+  return { offset: offset + 1 };
+}
+
 export function scanWord(context, line, offset) {
-  ({ offset } = scanBlank(context, line, offset));
+  ({ offset } = skipBlank(context, line, offset));
   const start = offset;
   while (offset < line.length && /\w/.test(line[offset])) offset += 1;
   return { data: line.slice(start, offset), offset };
@@ -69,7 +82,7 @@ export function scanType(context, line, offset) {
   let tStart = -1;
   let tEnd = -1;
   let tLevel = 0;
-  ({ offset } = scanBlank(context, line, offset));
+  ({ offset } = skipBlank(context, line, offset));
   const start = offset;
   for (; offset < line.length; offset += 1) {
     const ch = line[offset];
@@ -110,16 +123,7 @@ export function scanTypes(context, line, offset) {
     let data;
     ({ data, offset } = scanType(context, line, offset));
     types.push(data);
-    ({ offset } = scanBlank(context, line, offset));
-    const sep = line[offset];
-    if (sep && sep !== ',') {
-      throw new Error(`Invalid types string:
-
-${line}
-${' '.repeat(offset)}^
-`);
-    }
-    offset += 1;
+    ({ offset } = skipChar(context, line, offset, ','));
   }
   return types;
 }
@@ -141,6 +145,7 @@ export function scanParams(context, line, offset) {
     let data;
     ({ data, offset } = scanParam(context, line, offset));
     params.push(data);
+    ({ offset } = skipChar(context, line, offset, ','));
   }
   return params;
 }

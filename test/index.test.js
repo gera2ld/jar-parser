@@ -38,7 +38,7 @@ test('parse types', t => {
     const context = initContext({
       name: 'test-file.java',
     });
-    const result = scanParams(context, 'Map<String, String > abc', 0);
+    const result = scanParams(context, 'Map<String, String > abc, String str', 0);
     q.deepEqual(result, [
       {
         type: {
@@ -58,6 +58,14 @@ test('parse types', t => {
           ],
         },
         name: 'abc',
+      },
+      {
+        type: {
+          name: 'String',
+          fullName: undefined,
+          t: [],
+        },
+        name: 'str',
       },
     ]);
     q.end();
