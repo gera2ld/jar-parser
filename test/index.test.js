@@ -1,5 +1,5 @@
 import test from 'tape';
-import { parseFile } from '#/parser';
+import { initContext, parseFile, scanParams } from '#/parser';
 
 test('parse interface', t => {
   t.test('ok', q => {
@@ -29,6 +29,37 @@ public interface OneFacade {
       `,
     });
     q.equal(caseInterface.type, 'interface');
+    q.end();
+  });
+});
+
+test('parse types', t => {
+  t.test('ok', q => {
+    const context = initContext({
+      name: 'test-file.java',
+    });
+    const result = scanParams(context, 'Map<String, String > abc', 0);
+    q.deepEqual(result, [
+      {
+        type: {
+          name: 'Map',
+          fullName: undefined,
+          t: [
+            {
+              name: 'String',
+              fullName: undefined,
+              t: [],
+            },
+            {
+              name: 'String',
+              fullName: undefined,
+              t: [],
+            },
+          ],
+        },
+        name: 'abc',
+      },
+    ]);
     q.end();
   });
 });

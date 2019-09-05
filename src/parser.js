@@ -73,7 +73,7 @@ export function scanType(context, line, offset) {
   const start = offset;
   for (; offset < line.length; offset += 1) {
     const ch = line[offset];
-    if (ch === ' ' && !tLevel) {
+    if (!tLevel && ' ,'.includes(ch)) {
       break;
     }
     if (ch === '<') {
@@ -110,6 +110,16 @@ export function scanTypes(context, line, offset) {
     let data;
     ({ data, offset } = scanType(context, line, offset));
     types.push(data);
+    ({ offset } = scanBlank(context, line, offset));
+    const sep = line[offset];
+    if (sep && sep !== ',') {
+      throw new Error(`Invalid types string:
+
+${line}
+${' '.repeat(offset)}^
+`);
+    }
+    offset += 1;
   }
   return types;
 }
@@ -363,8 +373,8 @@ export function parseEnumItems(context, lines, offset) {
   };
 }
 
-export function parseFile(file) {
-  const context = {
+export function initContext(file) {
+  return {
     filename: file.name,
     deps: {
       exact: {},
@@ -372,6 +382,10 @@ export function parseFile(file) {
       items: [],
     },
   };
+}
+
+export function parseFile(file) {
+  const context = initContext(file);
   const { content } = file;
   const lines = content.trim().split(/[\r\n]/).map(line => line.trimEnd());
 
