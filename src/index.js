@@ -26,12 +26,14 @@ export function parseFiles(files) {
   };
 }
 
-export async function parseJar(blob) {
+export async function parseJar(blob, encoding) {
   const zip = await JSZip.loadAsync(blob);
   const fileObjects = zip.filter((relpath, { dir }) => !dir && relpath.endsWith('.java'));
   const files = await Promise.all(fileObjects.map(async (file) => {
+    let fileEncoding = typeof encoding === 'function' ? await encoding(file) : encoding;
+    fileEncoding = fileEncoding || 'utf8';
     const source = await file.async('arraybuffer');
-    const content = new TextDecoder('gbk').decode(source);
+    const content = new TextDecoder(fileEncoding).decode(source);
     return {
       name: file.name,
       content,
