@@ -61,7 +61,9 @@ export function skipChar(context, line, offset, char) {
   ({ offset } = skipBlank(context, line, offset));
   const sep = line[offset];
   if (sep && sep !== char) {
-    throw new Error(`\`${char}\` is expected:
+    throw new Error(`Error parsing ${context.filename}!
+
+\`${char}\` is expected:
 
 ${line}
 ${' '.repeat(offset)}^
@@ -109,6 +111,15 @@ export function scanType(context, line, offset) {
   } else {
     data.name = line.slice(start, tStart);
     data.t = scanTypes(context, line.slice(tStart + 1, tEnd), 0);
+  }
+  if (line[offset] === ' ') {
+    const { offset: nonBlankOffset } = skipBlank(context, line, offset);
+    if (line.slice(nonBlankOffset, nonBlankOffset + 8) === 'extends ') {
+      offset = nonBlankOffset + 7;
+      let extendType;
+      ({ data: extendType, offset } = scanType(context, line, offset));
+      data.extends = extendType;
+    }
   }
   return {
     type: 'type',
