@@ -11,5 +11,7 @@ module.exports = {
   rules: {
     'no-continue': 'off',
     'no-cond-assign': ['error', 'except-parens'],
+    'no-control-regex': 'off',
+    'no-constant-condition': 'off',
   },
 };
