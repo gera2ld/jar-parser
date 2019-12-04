@@ -150,6 +150,24 @@ public enum SomeEnum {
         comment: 'second item',
       },
     ]);
+    q.deepEqual(caseEnum.payload.fields, [
+      {
+        name: 'code',
+        type: {
+          name: 'String',
+          fullName: undefined,
+          t: [],
+        },
+      },
+      {
+        name: 'desc',
+        type: {
+          name: 'String',
+          fullName: undefined,
+          t: [],
+        },
+      },
+    ]);
     q.end();
   });
 });

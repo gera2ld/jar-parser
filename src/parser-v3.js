@@ -202,6 +202,7 @@ export function parseFile(file) {
       name,
       fullName: `${context.package.name}.${name}`,
       items: [],
+      fields: [],
       content: file.content,
       comment: getComment(offset),
     };
@@ -221,6 +222,12 @@ export function parseFile(file) {
       });
       return '\x02e';
     });
+    const restContent = content.slice(end + 1);
+    const matches = restContent.match(new RegExp(`${context.payload.name}\\s*\\((.*?)\\)\\s*\\{`));
+    if (matches) {
+      const fields = scanParams(context, matches[1]);
+      context.payload.fields = fields;
+    }
   }
 
   return context;
