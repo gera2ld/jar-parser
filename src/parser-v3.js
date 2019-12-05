@@ -127,38 +127,35 @@ export function parseFile(file) {
     return '\x02i';
   });
 
-  // parse interface
-  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+interface\s+(\w+)\s*\{/g, (m, g1, name, offset) => {
+  // parse classes
+  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+(interface|enum|(?:abstract\s+)?class)\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?\s*\{/g, (m, g1, type, name, extendsName, implementsNames, offset) => {
     if (g1) return g1;
     if (context.type) return m;
-    context.type = 'interface';
-    context.payload = {
-      name,
-      fullName: `${context.package.name}.${name}`,
-      comment: getComment(offset),
-      methods: [],
-      content: file.content,
-    };
-    context.payload.dep = getDep(context, context.payload);
-    return '\x02I';
-  });
-  if (context.type === 'interface') {
-    content = content.replace(/(\x02.)|(?:^|\n)\s*([\w\s<>,]+?) (\w+)\((.*?)\)\s*;/g, (_m, g1, typeStr, name, paramStr, offset) => {
-      if (g1) return g1;
-      context.payload.methods.push({
+    if (type === 'interface') {
+      context.type = 'interface';
+      context.payload = {
         name,
-        type: scanTypes(context, typeStr)[0],
-        params: scanParams(context, paramStr),
+        fullName: `${context.package.name}.${name}`,
         comment: getComment(offset),
-      });
-      return '\x02m';
-    });
-  }
-
-  // parse class
-  content = content.replace(/(\x02.)|(?:^|\n)\s*public(?:\s+abstract)?\s+class\s+(.*?)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?\s*\{/g, (m, g1, name, extendsName, implementsNames, offset) => {
-    if (g1) return g1;
-    if (context.type) return m;
+        methods: [],
+        content: file.content,
+      };
+      context.payload.dep = getDep(context, context.payload);
+      return '\x02I';
+    }
+    if (type === 'enum') {
+      context.type = 'enum';
+      context.payload = {
+        name,
+        fullName: `${context.package.name}.${name}`,
+        items: [],
+        fields: [],
+        content: file.content,
+        comment: getComment(offset),
+      };
+      context.payload.dep = getDep(context, context.payload);
+      return '\x02E';
+    }
     context.type = 'class';
     const extend = extendsName && getDep(context, { name: extendsName });
     const implement = implementsNames && implementsNames
@@ -180,6 +177,22 @@ export function parseFile(file) {
     };
     return '\x02C';
   });
+
+  // parse interface
+  if (context.type === 'interface') {
+    content = content.replace(/(\x02.)|(?:^|\n)\s*([\w\s<>,]+?) (\w+)\((.*?)\)\s*;/g, (_m, g1, typeStr, name, paramStr, offset) => {
+      if (g1) return g1;
+      context.payload.methods.push({
+        name,
+        type: scanTypes(context, typeStr)[0],
+        params: scanParams(context, paramStr),
+        comment: getComment(offset),
+      });
+      return '\x02m';
+    });
+  }
+
+  // parse class
   if (context.type === 'class') {
     content = content.replace(/(\x02.)|((?:(?:private|public|static|final)\s+)+)([\w\s<>,]+?)\s+(\w+)\s*[=;]/g, (m, g1, keyword, typeStr, name, offset) => {
       if (g1) return g1;
@@ -194,21 +207,6 @@ export function parseFile(file) {
   }
 
   // parse enum
-  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+enum\s+(\w+)\s*\{/g, (m, g1, name, offset) => {
-    if (g1) return g1;
-    if (context.type) return m;
-    context.type = 'enum';
-    context.payload = {
-      name,
-      fullName: `${context.package.name}.${name}`,
-      items: [],
-      fields: [],
-      content: file.content,
-      comment: getComment(offset),
-    };
-    context.payload.dep = getDep(context, context.payload);
-    return '\x02E';
-  });
   if (context.type === 'enum') {
     const start = content.indexOf('\x02E');
     const end = content.indexOf(';', start);
