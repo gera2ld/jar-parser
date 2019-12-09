@@ -128,7 +128,7 @@ export function parseFile(file) {
   });
 
   // parse classes
-  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+(interface|enum|(?:abstract\s+)?class)\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?\s*\{/g, (m, g1, type, name, extendsName, implementsNames, offset) => {
+  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+(interface|enum|(?:abstract\s+)?class)\s+([\w\s,<>]+?)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?\s*\{/g, (m, g1, type, name, extendsName, implementsNames, offset) => {
     if (g1) return g1;
     if (context.type) return m;
     if (type === 'interface') {
