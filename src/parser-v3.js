@@ -18,7 +18,7 @@ export function scanTypes(context, typeStr) {
   let lastTypes;
   let types = [];
   const scanBaseTypes = string => {
-    if (!/^(?:\x02t|[\w\s,])+$/.test(string)) {
+    if (!/^(?:\x02t|[\w\s,?])+$/.test(string)) {
       throw new Error(`Invalid type string "${string}" in "${typeStr}"`);
     }
     const baseTypes = string.split(',')
@@ -71,7 +71,7 @@ export function scanParams(context, paramStr) {
   };
   while (string) {
     const tracked = trackFunction(replacer);
-    string = string.replace(/^\s*([\w\s<>,]*?[\w>])\s+(\w+)\s*(?:,|$)/, tracked).trim();
+    string = string.replace(/^\s*([\w\s<>,?]*?[\w>])\s+(\w+)\s*(?:,|$)/, tracked).trim();
     assert(tracked.count(), `Invalid param string "${string}" in "${paramStr}"`);
   }
   return params;
