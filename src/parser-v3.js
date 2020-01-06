@@ -19,7 +19,7 @@ export function scanTypes(context, typeStr) {
   let types = [];
   const scanBaseTypes = string => {
     if (!/^(?:\x02t|[\w\s,?])+$/.test(string)) {
-      throw new Error(`Invalid type string "${string}" in "${typeStr}"`);
+      throw new Error(`Invalid base type string "${string}" in "${typeStr}"`);
     }
     const baseTypes = string.split(',')
     .map(item => {
@@ -51,7 +51,7 @@ export function scanTypes(context, typeStr) {
     lastTypes = types;
     types = [];
     const tracked = trackFunction(replacer);
-    string = string.replace(/(\x02t)|(\w+)<([^<>]+)>/g, tracked).trim();
+    string = string.replace(/(\x02t)|(\w+)\s*<([^<>]+)>/g, tracked).trim();
     assert(tracked.count(), `Invalid type string "${string}" in "${typeStr}"`);
   }
   lastTypes = types;
