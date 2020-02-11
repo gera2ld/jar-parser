@@ -25,7 +25,10 @@ public interface OneFacade {
     /**
      * one method
      */
-    BaseResponse<ResponseItem> query(RequestItem request, BaseRequest<BaseRequest<RequestItem>, RequestItem> requestItem);
+    BaseResponse<ResponseItem> query(
+        RequestItem request,
+        BaseRequest<BaseRequest<RequestItem>,
+        RequestItem> requestItem);
 
     /**
      * another method

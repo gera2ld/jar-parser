@@ -180,7 +180,7 @@ export function parseFile(file) {
 
   // parse interface
   if (context.type === 'interface') {
-    content = content.replace(/(\x02.)|(?:^|\n)\s*([\w\s<>,]+?) (\w+)\((.*?)\)\s*;/g, (_m, g1, typeStr, name, paramStr, offset) => {
+    content = content.replace(/(\x02.)|(?:^|\n)\s*([\w\s<>,]+?) (\w+)\(\s*([\s\S]*?)\s*\)\s*;/g, (_m, g1, typeStr, name, paramStr, offset) => {
       if (g1) return g1;
       context.payload.methods.push({
         name,
