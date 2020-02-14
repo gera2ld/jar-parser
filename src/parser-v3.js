@@ -62,16 +62,16 @@ export function scanTypes(context, typeStr) {
 export function scanParams(context, paramStr) {
   const params = [];
   let string = paramStr.trim();
-  const replacer = (_m, typeStr, name) => {
+  const replacer = (_m, typeStr, variable, name) => {
     params.push({
-      name,
+      name: (variable || '') + name,
       type: scanTypes(context, typeStr)[0],
     });
     return '';
   };
   while (string) {
     const tracked = trackFunction(replacer);
-    string = string.replace(/^\s*([\w\s<>,?]*?[\w>])\s+(\w+)\s*(?:,|$)/, tracked).trim();
+    string = string.replace(/^\s*([\w\s<>,?]*?[\w>])(?:\s+|\s*(\.\.\.)\s*)(\w+)\s*(?:,|$)/, tracked).trim();
     assert(tracked.count(), `Invalid param string "${string}" in "${paramStr}"`);
   }
   return params;
@@ -180,51 +180,63 @@ export function parseFile(file) {
 
   // parse interface
   if (context.type === 'interface') {
-    content = content.replace(/(\x02.)|(?:^|\n)\s*([\w\s<>,]+?) (\w+)\(\s*([\s\S]*?)\s*\)\s*;/g, (_m, g1, typeStr, name, paramStr, offset) => {
-      if (g1) return g1;
-      context.payload.methods.push({
-        name,
-        type: scanTypes(context, typeStr)[0],
-        params: scanParams(context, paramStr),
-        comment: getComment(offset),
+    try {
+      content = content.replace(/(\x02.)|(?:^|\n)\s*(?:(?:private|public|static|final)\s+)?([\w\s<>,]+?) (\w+)\(\s*([\s\S]*?)\s*\)\s*(?:;|throws\s)/g, (_m, g1, typeStr, name, paramStr, offset) => {
+        if (g1) return g1;
+        context.payload.methods.push({
+          name,
+          type: scanTypes(context, typeStr)[0],
+          params: scanParams(context, paramStr),
+          comment: getComment(offset),
+        });
+        return '\x02m';
       });
-      return '\x02m';
-    });
+    } catch (err) {
+      context.error = err;
+    }
   }
 
   // parse class
   if (context.type === 'class') {
-    content = content.replace(/(\x02.)|((?:(?:private|public|static|final)\s+)+)([\w\s<>,]+?)\s+(\w+)\s*[=;]/g, (m, g1, keyword, typeStr, name, offset) => {
-      if (g1) return g1;
-      if (keyword.includes('static')) return m;
-      context.payload.props.push({
-        name,
-        type: scanTypes(context, typeStr)[0],
-        comment: getComment(offset),
+    try {
+      content = content.replace(/(\x02.)|((?:(?:private|public|static|final)\s+)+)([\w\s<>,]+?)\s+(\w+)\s*[=;]/g, (m, g1, keyword, typeStr, name, offset) => {
+        if (g1) return g1;
+        if (keyword.includes('static')) return m;
+        context.payload.props.push({
+          name,
+          type: scanTypes(context, typeStr)[0],
+          comment: getComment(offset),
+        });
+        return '\x02p';
       });
-      return '\x02p';
-    });
+    } catch (err) {
+      context.error = err;
+    }
   }
 
   // parse enum
   if (context.type === 'enum') {
-    const start = content.indexOf('\x02E');
-    const end = content.indexOf(';', start);
-    const enumContent = content.slice(start, end);
-    enumContent.replace(/(\x02.)|(\w+)\(([^()]+)\)(?:,|\s*$)/g, (_m, g1, name, paramStr, offset) => {
-      if (g1) return g1;
-      context.payload.items.push({
-        name,
-        params: paramStr.split(',').map(item => item.trim()),
-        comment: getComment(start + offset),
+    try {
+      const start = content.indexOf('\x02E');
+      const end = content.indexOf(';', start);
+      const enumContent = content.slice(start, end);
+      enumContent.replace(/(\x02.)|(\w+)\(([^()]+)\)(?:,|\s*$)/g, (_m, g1, name, paramStr, offset) => {
+        if (g1) return g1;
+        context.payload.items.push({
+          name,
+          params: paramStr.split(',').map(item => item.trim()),
+          comment: getComment(start + offset),
+        });
+        return '\x02e';
       });
-      return '\x02e';
-    });
-    const restContent = content.slice(end + 1);
-    const matches = restContent.match(new RegExp(`${context.payload.name}\\s*\\((.*?)\\)\\s*\\{`));
-    if (matches) {
-      const fields = scanParams(context, matches[1]);
-      context.payload.fields = fields;
+      const restContent = content.slice(end + 1);
+      const matches = restContent.match(new RegExp(`${context.payload.name}\\s*\\((.*?)\\)\\s*\\{`));
+      if (matches) {
+        const fields = scanParams(context, matches[1]);
+        context.payload.fields = fields;
+      }
+    } catch (err) {
+      context.error = err;
     }
   }
 

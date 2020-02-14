@@ -25,10 +25,14 @@ public interface OneFacade {
     /**
      * one method
      */
-    BaseResponse<ResponseItem> query(
+    public BaseResponse<ResponseItem> query(
         RequestItem request,
         BaseRequest<BaseRequest<RequestItem>,
-        RequestItem> requestItem);
+        RequestItem> requestItem,
+        String...a,
+        String ...b,
+        String... c,
+        String ... d);
 
     /**
      * another method
@@ -41,6 +45,8 @@ public interface OneFacade {
     q.equal(caseInterface.type, 'interface');
     q.equal(caseInterface.payload.methods.length, 2);
     q.equal(caseInterface.payload.methods[0].name, 'query');
+    q.equal(caseInterface.payload.methods[0].params.length, 6);
+    q.equal(caseInterface.payload.methods[0].params[2].name, '...a');
     q.deepEqual(caseInterface.payload.methods[1], {
       name: 'done',
       type: {
