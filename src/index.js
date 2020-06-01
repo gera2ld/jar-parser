@@ -67,7 +67,7 @@ export function parseFiles(files) {
   };
 }
 
-export async function parseJar(blob, encoding) {
+export async function loadFilesFromJar(blob, encoding) {
   const zip = await JSZip.loadAsync(blob);
   const fileObjects = zip.filter((relpath, { dir }) => !dir && relpath.endsWith('.java'));
   const files = await Promise.all(fileObjects.map(async (file) => {
@@ -80,5 +80,13 @@ export async function parseJar(blob, encoding) {
       content,
     };
   }));
+  return files;
+}
+
+export async function parseJar(blobs, encoding) {
+  if (!Array.isArray(blobs)) {
+    blobs = [blobs];
+  }
+  const files = (await Promise.all(blobs.map(blob => loadFilesFromJar(blob, encoding)))).flat();
   return parseFiles(files);
 }
