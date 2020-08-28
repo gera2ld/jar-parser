@@ -1,9 +1,9 @@
 import { getDep, initContext } from './util';
 
-function trackFunction(fn) {
+function trackFunction(fn, when) {
   let count = 0;
   const tracked = (...args) => {
-    count += 1;
+    if (!when || when(...args)) count += 1;
     return fn(...args);
   };
   tracked.count = () => count;
@@ -12,6 +12,36 @@ function trackFunction(fn) {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+export function scanDefinition(context, defStr) {
+  let mask = defStr;
+  const replacer = m => ' '.repeat(m.length);
+  while (mask.includes('<')) {
+    const tracked = trackFunction(replacer);
+    mask = mask.replace(/<[^<>]+>/g, tracked);
+    assert(tracked.count(), `Invalid definition string "${defStr}"`);
+  }
+  let implementsStr;
+  let extendsStr;
+  {
+    const i = mask.indexOf(' implements ');
+    if (i >= 0) {
+      implementsStr = defStr.slice(i + 12);
+      defStr = defStr.slice(0, i);
+    }
+  }
+  {
+    const i = mask.indexOf(' extends ');
+    if (i >= 0) {
+      extendsStr = defStr.slice(i + 9);
+      defStr = defStr.slice(0, i);
+    }
+  }
+  const nameDep = scanTypes(context, defStr)[0];
+  const extendDep = extendsStr && scanTypes(context, extendsStr)[0];
+  const implementDeps = implementsStr && scanTypes(context, implementsStr);
+  return { nameDep, extendDep, implementDeps };
 }
 
 export function scanTypes(context, typeStr) {
@@ -50,7 +80,7 @@ export function scanTypes(context, typeStr) {
   while (string.includes('<')) {
     lastTypes = types;
     types = [];
-    const tracked = trackFunction(replacer);
+    const tracked = trackFunction(replacer, (_m, p) => !p);
     string = string.replace(/(\x02t)|(\w+)\s*<([^<>]+)>/g, tracked).trim();
     assert(tracked.count(), `Invalid type string "${string}" in "${typeStr}"`);
   }
@@ -128,14 +158,16 @@ export function parseFile(file) {
   });
 
   // parse classes
-  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+(interface|enum|(?:abstract\s+)?class)\s+([\w\s,<>]+?)(?:\s+extends\s+([\w\s,<>]+?))?(?:\s+implements\s+([\w,\s]+))?\s*\{/g, (m, g1, type, name, extendsName, implementsNames, offset) => {
+  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+(interface|enum|(?:abstract\s+)?class)\s+([\w\s,<>]+?)\s*\{/g, (m, g1, type, defStr, offset) => {
     if (g1) return g1;
     if (context.type) return m;
+    const { nameDep, extendDep, implementDeps } = scanDefinition(context, defStr);
+    nameDep.fullName = `${context.package.name}.${nameDep.name}`;
     if (type === 'interface') {
       context.type = 'interface';
       context.payload = {
-        name,
-        fullName: `${context.package.name}.${name}`,
+        name: nameDep.name,
+        fullName: nameDep.fullName,
         comment: getComment(offset),
         methods: [],
         content: file.content,
@@ -146,8 +178,8 @@ export function parseFile(file) {
     if (type === 'enum') {
       context.type = 'enum';
       context.payload = {
-        name,
-        fullName: `${context.package.name}.${name}`,
+        name: nameDep.name,
+        fullName: nameDep.fullName,
         items: [],
         fields: [],
         content: file.content,
@@ -157,20 +189,12 @@ export function parseFile(file) {
       return '\x02E';
     }
     context.type = 'class';
-    const extend = extendsName && scanTypes(context, extendsName)[0];
-    const implement = implementsNames && implementsNames
-    .split(',')
-    .map(item => item.trim())
-    .filter(Boolean)
-    .map(implementsName => getDep(context, { name: implementsName }));
-    const dep = scanTypes(context, name)[0];
-    dep.fullName = `${context.package.name}.${dep.name}`;
     context.payload = {
-      name: dep.name,
-      dep,
-      extend,
-      implement,
-      fullName: dep.fullName,
+      name: nameDep.name,
+      dep: nameDep,
+      extend: extendDep,
+      implement: implementDeps,
+      fullName: nameDep.fullName,
       props: [],
       content: file.content,
       comment: getComment(offset),

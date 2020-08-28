@@ -42,8 +42,7 @@ export function resolveDeps(contexts) {
   return unresolved;
 }
 
-export function parseFiles(files) {
-  const items = files.map(parseFile);
+export function groupItems(items) {
   const invalid = items.filter(({ type }) => !type);
   const valid = items.filter(({ type }) => type);
   const unresolved = resolveDeps(valid);
@@ -65,6 +64,11 @@ export function parseFiles(files) {
     invalid,
     unresolved,
   };
+}
+
+export function parseFiles(files) {
+  const items = files.map(parseFile);
+  return groupItems(items);
 }
 
 export async function loadFilesFromJar(blob, encoding) {
