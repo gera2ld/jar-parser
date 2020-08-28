@@ -182,7 +182,7 @@ public enum SomeEnum {
 });
 
 test('parse classes', t => {
-  t.test('ok', q => {
+  t.test('T', q => {
     const file = {
       name: '/home/gerald/com/gerald/one/enum.java',
       content: `
@@ -195,6 +195,38 @@ package com.gerald.model.classes;
  * @author Gerald
  */
 public class SomeClass<T> {
+  T t;
+}
+`,
+    };
+    const caseClass = parseFile(file);
+    q.deepEqual(caseClass.payload.dep, {
+      name: 'SomeClass',
+      fullName: 'com.gerald.model.classes.SomeClass',
+      t: [
+        {
+          name: 'T',
+          fullName: undefined,
+          t: [],
+        },
+      ],
+    });
+    q.end();
+  });
+
+  t.test('T extends T', q => {
+    const file = {
+      name: '/home/gerald/com/gerald/one/enum.java',
+      content: `
+/**
+ * hello, world
+ */
+package com.gerald.model.classes;
+
+/**
+ * @author Gerald
+ */
+public class SomeClass<T> extends Common<T> {
   T t;
 }
 `,

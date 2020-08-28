@@ -128,7 +128,7 @@ export function parseFile(file) {
   });
 
   // parse classes
-  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+(interface|enum|(?:abstract\s+)?class)\s+([\w\s,<>]+?)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?\s*\{/g, (m, g1, type, name, extendsName, implementsNames, offset) => {
+  content = content.replace(/(\x02.)|(?:^|\n)\s*public\s+(interface|enum|(?:abstract\s+)?class)\s+([\w\s,<>]+?)(?:\s+extends\s+([\w\s,<>]+?))?(?:\s+implements\s+([\w,\s]+))?\s*\{/g, (m, g1, type, name, extendsName, implementsNames, offset) => {
     if (g1) return g1;
     if (context.type) return m;
     if (type === 'interface') {
@@ -157,7 +157,7 @@ export function parseFile(file) {
       return '\x02E';
     }
     context.type = 'class';
-    const extend = extendsName && getDep(context, { name: extendsName });
+    const extend = extendsName && scanTypes(context, extendsName)[0];
     const implement = implementsNames && implementsNames
     .split(',')
     .map(item => item.trim())
