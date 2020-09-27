@@ -14,7 +14,8 @@
     "cov:open": "open coverage/index.html"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "peerDependencies": {
     "jszip": "^3.2.2"
