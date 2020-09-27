@@ -24,20 +24,14 @@ export function scanDefinition(context, defStr) {
   }
   let implementsStr;
   let extendsStr;
-  {
-    const i = mask.indexOf(' implements ');
-    if (i >= 0) {
-      implementsStr = defStr.slice(i + 12);
-      defStr = defStr.slice(0, i);
-    }
-  }
-  {
-    const i = mask.indexOf(' extends ');
-    if (i >= 0) {
-      extendsStr = defStr.slice(i + 9);
-      defStr = defStr.slice(0, i);
-    }
-  }
+  mask.replace(/\simplements\s/, (m, offset) => {
+    implementsStr = defStr.slice(offset + m.length);
+    defStr = defStr.slice(0, offset);
+  });
+  mask.replace(/\sextends\s/, (m, offset) => {
+    extendsStr = defStr.slice(offset + m.length);
+    defStr = defStr.slice(0, offset);
+  });
   const nameDep = scanTypes(context, defStr)[0];
   const extendDep = extendsStr && scanTypes(context, extendsStr)[0];
   const implementDeps = implementsStr && scanTypes(context, implementsStr);
@@ -205,7 +199,7 @@ export function parseFile(file) {
   // parse interface
   if (context.type === 'interface') {
     try {
-      content = content.replace(/(\x02.)|(?:^|\n)\s*(?:(?:private|public|static|final)\s+)?([\w\s<>,]+?) (\w+)\(\s*([\s\S]*?)\s*\)\s*(?:;|throws\s)/g, (_m, g1, typeStr, name, paramStr, offset) => {
+      content = content.replace(/(\x02.)|(?:^|\n)\s*(?:(?:private|public|static|final)\s+)?([\w\s<>,]+?)\s(\w+)\(\s*([\s\S]*?)\s*\)\s*(?:;|throws\s)/g, (_m, g1, typeStr, name, paramStr, offset) => {
         if (g1) return g1;
         context.payload.methods.push({
           name,

@@ -182,6 +182,39 @@ public enum SomeEnum {
 });
 
 test('parse classes', t => {
+  t.test('extends', q => {
+    const file = {
+      name: '/home/gerald/com/gerald/one/enum.java',
+      content: `
+/**
+ * hello, world
+ */
+package com.gerald.model.classes;
+
+import com.gerald.another.facade.BaseClass;
+
+/**
+ * @author Gerald
+ */
+public class SomeClass extends
+BaseClass {
+}
+`,
+    };
+    const caseClass = parseFile(file);
+    q.deepEqual(caseClass.payload.dep, {
+      name: 'SomeClass',
+      fullName: 'com.gerald.model.classes.SomeClass',
+      t: [],
+    });
+    q.deepEqual(caseClass.payload.extend, {
+      name: 'BaseClass',
+      fullName: undefined,
+      t: [],
+    });
+    q.end();
+  });
+
   t.test('T', q => {
     const file = {
       name: '/home/gerald/com/gerald/one/enum.java',
