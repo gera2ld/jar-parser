@@ -1,16 +1,34 @@
-const rollup = require('rollup');
-const { getRollupPlugins, getExternal, DIST } = require('./scripts/util');
+const {
+  defaultOptions,
+  getRollupExternal,
+  getRollupPlugins,
+  loadConfigSync,
+  rollupMinify,
+} = require('@gera2ld/plaid');
 const pkg = require('./package.json');
 
+const DIST = defaultOptions.distDir;
 const FILENAME = 'index';
 const BANNER = `/*! ${pkg.name} v${pkg.version} | ${pkg.license} License */`;
 
-const external = getExternal(['jszip']);
+const external = getRollupExternal(['jszip']);
+const bundleOptions = {
+  extend: true,
+  esModule: false,
+};
+const postcssConfig = loadConfigSync('postcss') || require('@gera2ld/plaid/config/postcssrc');
+const postcssOptions = {
+  ...postcssConfig,
+  inject: false,
+};
 const rollupConfig = [
   {
     input: {
       input: 'src/index.js',
-      plugins: getRollupPlugins(),
+      plugins: getRollupPlugins({
+        extensions: defaultOptions.extensions,
+        postcss: postcssOptions,
+      }),
       external,
     },
     output: {
@@ -21,7 +39,11 @@ const rollupConfig = [
   {
     input: {
       input: 'src/index.js',
-      plugins: getRollupPlugins(),
+      plugins: getRollupPlugins({
+        esm: true,
+        extensions: defaultOptions.extensions,
+        postcss: postcssOptions,
+      }),
       external,
     },
     output: {
@@ -29,26 +51,37 @@ const rollupConfig = [
       file: `${DIST}/${FILENAME}.esm.js`,
     },
   },
-  {
+  ...[false].map(minimize => ({
     input: {
       input: 'src/index.js',
-      plugins: getRollupPlugins({ browser: true }),
+      plugins: getRollupPlugins({
+        minimize,
+        esm: true,
+        extensions: defaultOptions.extensions,
+        postcss: {
+          ...postcssOptions,
+          extract: 'style.css',
+        },
+      }),
       external,
     },
     output: {
-      format: 'umd',
-      file: `${DIST}/${FILENAME}.umd.js`,
+      format: 'iife',
+      file: `${DIST}/${FILENAME}.js`,
       name: 'JarParser',
       globals: {
         jszip: 'JSZip',
       },
+      ...bundleOptions,
     },
-  },
+  })),
 ];
 
 rollupConfig.forEach((item) => {
   item.output = {
     indent: false,
+    // If set to false, circular dependencies and live bindings for external imports won't work
+    externalLiveBindings: false,
     ...item.output,
     ...BANNER && {
       banner: BANNER,
