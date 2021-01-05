@@ -1,6 +1,6 @@
 {
   "name": "@gera2ld/jar-parser",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Parse Jar files and resolve dependencies",
   "author": "Gerald <gera2ld@163.com>",
   "license": "MIT",
