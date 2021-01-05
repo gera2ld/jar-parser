@@ -184,7 +184,7 @@ public enum SomeEnum {
 test('parse classes', t => {
   t.test('extends', q => {
     const file = {
-      name: '/home/gerald/com/gerald/one/enum.java',
+      name: '/home/gerald/com/gerald/one/class.java',
       content: `
 /**
  * hello, world
@@ -217,7 +217,7 @@ BaseClass {
 
   t.test('T', q => {
     const file = {
-      name: '/home/gerald/com/gerald/one/enum.java',
+      name: '/home/gerald/com/gerald/one/class.java',
       content: `
 /**
  * hello, world
@@ -249,7 +249,7 @@ public class SomeClass<T> {
 
   t.test('T extends T', q => {
     const file = {
-      name: '/home/gerald/com/gerald/one/enum.java',
+      name: '/home/gerald/com/gerald/one/class.java',
       content: `
 /**
  * hello, world
@@ -276,6 +276,53 @@ public class SomeClass<T> extends Common<T> {
         },
       ],
     });
+    q.end();
+  });
+
+  t.test('? extends T', q => {
+    const file = {
+      name: '/home/gerald/com/gerald/one/class.java',
+      content: `
+/**
+ * hello, world
+ */
+package com.gerald.model.classes;
+
+/**
+ * @author Gerald
+ */
+public class SomeClass implements BaseClass{
+  /**
+   * this is a list
+   */
+  private List<? extends BaseProperty> propertyList;
+}
+`,
+    };
+    const caseClass = parseFile(file);
+    q.deepEqual(caseClass.payload.dep, {
+      name: 'SomeClass',
+      fullName: 'com.gerald.model.classes.SomeClass',
+      t: [
+      ],
+    });
+    q.deepEqual(caseClass.payload.props, [
+      {
+        name: 'propertyList',
+        type: {
+          name: 'List',
+          fullName: undefined,
+          t: [
+            {
+              name: '? extends BaseProperty',
+              fullName: undefined,
+              t: [],
+            },
+          ],
+        },
+        comment: 'this is a list',
+      },
+    ]);
     q.end();
   });
 });
