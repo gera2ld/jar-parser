@@ -67,9 +67,15 @@ export function scanTypes(context, typeStr) {
       if (item === `${CONTROL_CHAR}t`) {
         return lastTypes.shift();
       }
+      let extendsStr;
+      item.replace(/\sextends\s/, (m, offset) => {
+        extendsStr = item.slice(offset + m.length);
+        item = item.slice(0, offset);
+      });
       return getDep(context, {
         name: item,
         t: [],
+        e: extendsStr && scanBaseTypes(extendsStr)[0],
       });
     });
     return baseTypes;

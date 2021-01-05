@@ -53,6 +53,7 @@ public interface OneFacade {
         name: 'boolean',
         fullName: undefined,
         t: [],
+        e: undefined,
       },
       params: [],
       comment: 'another method',
@@ -77,13 +78,16 @@ test('parse types', t => {
               name: 'String',
               fullName: undefined,
               t: [],
+              e: undefined,
             },
             {
               name: 'String',
               fullName: undefined,
               t: [],
+              e: undefined,
             },
           ],
+          e: undefined,
         },
         name: 'abc',
       },
@@ -92,6 +96,7 @@ test('parse types', t => {
           name: 'String',
           fullName: undefined,
           t: [],
+          e: undefined,
         },
         name: 'str',
       },
@@ -166,6 +171,7 @@ public enum SomeEnum {
           name: 'String',
           fullName: undefined,
           t: [],
+          e: undefined,
         },
       },
       {
@@ -174,6 +180,7 @@ public enum SomeEnum {
           name: 'String',
           fullName: undefined,
           t: [],
+          e: undefined,
         },
       },
     ]);
@@ -206,11 +213,13 @@ BaseClass {
       name: 'SomeClass',
       fullName: 'com.gerald.model.classes.SomeClass',
       t: [],
+      e: undefined,
     });
     q.deepEqual(caseClass.payload.extend, {
       name: 'BaseClass',
       fullName: undefined,
       t: [],
+      e: undefined,
     });
     q.end();
   });
@@ -241,8 +250,10 @@ public class SomeClass<T> {
           name: 'T',
           fullName: undefined,
           t: [],
+          e: undefined,
         },
       ],
+      e: undefined,
     });
     q.end();
   });
@@ -273,8 +284,10 @@ public class SomeClass<T> extends Common<T> {
           name: 'T',
           fullName: undefined,
           t: [],
+          e: undefined,
         },
       ],
+      e: undefined,
     });
     q.end();
   });
@@ -305,6 +318,7 @@ public class SomeClass implements BaseClass{
       fullName: 'com.gerald.model.classes.SomeClass',
       t: [
       ],
+      e: undefined,
     });
     q.deepEqual(caseClass.payload.props, [
       {
@@ -314,11 +328,18 @@ public class SomeClass implements BaseClass{
           fullName: undefined,
           t: [
             {
-              name: '? extends BaseProperty',
+              name: '?',
               fullName: undefined,
               t: [],
+              e: {
+                name: 'BaseProperty',
+                fullName: undefined,
+                t: [],
+                e: undefined,
+              },
             },
           ],
+          e: undefined,
         },
         comment: 'this is a list',
       },

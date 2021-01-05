@@ -1,8 +1,9 @@
-export function getDep(context, { name, fullName, t }) {
+export function getDep(context, { name, fullName, t, e }) {
   const dep = {
     name,
     fullName,
     t: t || [],
+    e,
   };
   if (!name) throw new Error('name is required');
   context.deps.items.push(dep);
